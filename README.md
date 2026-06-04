@@ -1,8 +1,6 @@
 # Sistema de Gestion de Ventas API REST
 API REST para gestión de ventas desarrollada con Django. Incluye autenticación JWT, gestión de clientes y panel administrativo.
 
-# Sistema de Gestión de Ventas — API REST
-
 ## Información General
 
 | Campo | Detalle |
