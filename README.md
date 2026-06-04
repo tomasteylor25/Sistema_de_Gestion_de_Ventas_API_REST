@@ -130,16 +130,14 @@ cp .env.example .env
 Editar `.env` con tus credenciales:
 
 ```env
-SECRET_KEY=tu-clave-secreta-aqui
-DEBUG=True
-ALLOWED_HOSTS=localhost,127.0.0.1
+DEBUG=****
 
-DB_NAME=ventas_db
-DB_USER=postgres
-DB_PASSWORD=tu_password
-DB_HOST=localhost
-DB_PORT=5432
-DB_SCHEMA=ventas_schema
+DB_NAME=******
+DB_USER=******
+DB_PASSWORD=******
+DB_HOST=******
+DB_PORT=****
+DB_SCHEMA=******
 ```
 
 ### 5. Crear la base de datos en PostgreSQL
@@ -329,8 +327,6 @@ master   ──── versiones estables y finales (tags)
 develop  ──── desarrollo principal
   │
 release  ──── versión candidata antes de pasar a master
-  │
-feature/ ──── ramas de funcionalidades (se fusionan a develop)
 ```
 
 ### Comandos básicos
@@ -339,14 +335,6 @@ feature/ ──── ramas de funcionalidades (se fusionan a develop)
 # Clonar y configurar ramas
 git checkout -b develop
 git checkout -b release
-
-# Crear rama de feature
-git checkout develop
-git checkout -b feature/crud-clientes
-
-# Fusionar feature a develop
-git checkout develop
-git merge feature/crud-clientes
 
 # Preparar release
 git checkout -b release
