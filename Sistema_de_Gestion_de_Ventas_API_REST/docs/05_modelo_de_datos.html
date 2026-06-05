@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Modelo de Datos - Sistema de Gestión de Ventas</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; color: #1a1a2e; background: #f8f9fa; }
+
+  .page { max-width: 1100px; margin: 0 auto; padding: 32px; }
+
+  /* Portada */
+  .cover { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+          color: white; padding: 60px 40px; border-radius: 12px; margin-bottom: 40px; text-align: center; }
+  .cover h1 { font-size: 2.2rem; margin-bottom: 12px; }
+  .cover h2 { font-size: 1.3rem; font-weight: 400; opacity: .8; margin-bottom: 30px; }
+  .cover .badge { display: inline-block; background: #e94560; color: white;
+                  padding: 6px 18px; border-radius: 20px; font-size: .85rem; margin: 4px; }
+
+  /* Secciones */
+  h2.sec { font-size: 1.4rem; color: #0f3460; border-left: 5px solid #e94560;
+          padding-left: 14px; margin: 36px 0 16px; }
+  h3.sub { font-size: 1.05rem; color: #16213e; margin: 24px 0 10px; }
+
+  p { line-height: 1.7; margin-bottom: 10px; color: #333; }
+
+  /* Tablas */
+  table { width: 100%; border-collapse: collapse; margin-bottom: 28px;
+          box-shadow: 0 2px 8px rgba(0,0,0,.08); border-radius: 8px; overflow: hidden; }
+  thead tr { background: #0f3460; color: white; }
+  thead th { padding: 11px 14px; text-align: left; font-size: .88rem; font-weight: 600; }
+  tbody tr { background: white; border-bottom: 1px solid #eef0f4; }
+  tbody tr:nth-child(even) { background: #f5f7fb; }
+  tbody tr:hover { background: #e8edf5; }
+  tbody td { padding: 9px 14px; font-size: .87rem; }
+  .pk  { color: #e94560; font-weight: 700; }
+  .fk  { color: #0066cc; font-weight: 600; }
+  .req { color: #1a7a4a; font-weight: 500; }
+  .opt { color: #888; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 10px;
+        font-size: .75rem; font-weight: 600; }
+  .tag-pk  { background: #ffe0e6; color: #c0001a; }
+  .tag-fk  { background: #dbeafe; color: #1e3a8a; }
+  .tag-idx { background: #dcfce7; color: #14532d; }
+
+  /* Diagrama ER SVG */
+  .er-wrap { background: white; border-radius: 12px; padding: 24px;
+            box-shadow: 0 2px 12px rgba(0,0,0,.1); margin-bottom: 32px; overflow-x: auto; }
+
+  /* Relaciones */
+  .rel-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+  .rel-card { background: white; border-radius: 8px; padding: 16px;
+              box-shadow: 0 2px 6px rgba(0,0,0,.08); border-left: 4px solid #0f3460; }
+  .rel-card h4 { font-size: .95rem; color: #0f3460; margin-bottom: 6px; }
+  .rel-card p  { font-size: .82rem; color: #555; margin: 0; }
+  .arrow { color: #e94560; font-weight: 700; }
+
+  /* Ajustes badge */
+  .adj-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+  .adj-card { background: white; border-radius: 8px; padding: 14px;
+              box-shadow: 0 1px 4px rgba(0,0,0,.08); display: flex; align-items: flex-start; gap: 10px; }
+  .adj-num  { background: #0f3460; color: white; border-radius: 50%;
+              width: 28px; height: 28px; display: flex; align-items: center;
+              justify-content: center; font-size: .8rem; font-weight: 700; flex-shrink: 0; }
+  .adj-card h4 { font-size: .88rem; color: #1a1a2e; margin-bottom: 3px; }
+  .adj-card p  { font-size: .78rem; color: #666; margin: 0; }
+
+  @media print {
+    body { background: white; }
+    .page { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- PORTADA -->
+<div class="cover">
+  <h1>📊 Modelo de Datos</h1>
+  <h2>Sistema de Gestión de Ventas</h2>
+  <div>
+    <span class="badge">Problema 4</span>
+    <span class="badge">Django + PostgreSQL</span>
+    <span class="badge">DRF</span>
+    <span class="badge">8 Tablas</span>
+    <span class="badge">7 Relaciones</span>
+  </div>
+</div>
+
+<!-- 1. DESCRIPCIÓN DEL PROBLEMA -->
+<h2 class="sec">1. Descripción del Problema</h2>
+<p>Una empresa comercial requiere un sistema para administrar sus operaciones de ventas. El sistema debe gestionar <strong>clientes</strong>, <strong>productos</strong>, <strong>proveedores</strong>, <strong>pedidos</strong>, el <strong>detalle de los pedidos</strong>, <strong>facturas</strong>, <strong>pagos</strong> y las <strong>sucursales</strong> de la empresa.</p>
+<p>La solución implementa una <strong>API REST</strong> construida con Django y Django REST Framework, conectada a una base de datos PostgreSQL organizada en un schema dedicado (<code>ventas_schema</code>). Se aplican las 13 características obligatorias de la guía: autenticación JWT, paginación, filtros, ordenamiento, soft delete, auditoría, Swagger, versionado de API, respuestas JSON estandarizadas, roles y permisos, nested serializers, exportación y logging.</p>
+
+<!-- 2. DIAGRAMA ER -->
+<h2 class="sec">2. Diagrama Entidad-Relación</h2>
+<div class="er-wrap">
+<svg viewBox="0 0 980 620" xmlns="http://www.w3.org/2000/svg" style="width:100%;min-width:700px">
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0,10 3.5,0 7" fill="#0f3460"/>
+    </marker>
+  </defs>
+
+  <!-- fondo -->
+  <rect width="980" height="620" fill="#f8f9fa" rx="10"/>
+
+  <!-- ── Entidades ── -->
+  <!-- PROVEEDORES -->
+  <g>
+    <rect x="20" y="40" width="160" height="100" rx="8" fill="#0f3460" stroke="#e94560" stroke-width="2"/>
+    <text x="100" y="62" text-anchor="middle" fill="white" font-size="12" font-weight="700">PROVEEDORES</text>
+    <line x1="20" y1="70" x2="180" y2="70" stroke="white" stroke-width=".5" opacity=".4"/>
+    <text x="30" y="88"  fill="#ffd700" font-size="10">🔑 id</text>
+    <text x="30" y="103" fill="#cdd" font-size="10">nit (UNIQUE)</text>
+    <text x="30" y="118" fill="#cdd" font-size="10">nombre, ciudad…</text>
+  </g>
+
+  <!-- PRODUCTOS -->
+  <g>
+    <rect x="20" y="220" width="160" height="120" rx="8" fill="#0f3460" stroke="#e94560" stroke-width="2"/>
+    <text x="100" y="242" text-anchor="middle" fill="white" font-size="12" font-weight="700">PRODUCTOS</text>
+    <line x1="20" y1="250" x2="180" y2="250" stroke="white" stroke-width=".5" opacity=".4"/>
+    <text x="30" y="268" fill="#ffd700" font-size="10">🔑 id</text>
+    <text x="30" y="283" fill="#cdd" font-size="10">codigo, nombre</text>
+    <text x="30" y="298" fill="#cdd" font-size="10">precio, stock</text>
+    <text x="30" y="313" fill="#7bb8ff" font-size="10">🔗 proveedor_id</text>
+  </g>
+
+  <!-- SUCURSALES -->
+  <g>
+    <rect x="390" y="40" width="160" height="100" rx="8" fill="#0f3460" stroke="#e94560" stroke-width="2"/>
+    <text x="470" y="62" text-anchor="middle" fill="white" font-size="12" font-weight="700">SUCURSALES</text>
+    <line x1="390" y1="70" x2="550" y2="70" stroke="white" stroke-width=".5" opacity=".4"/>
+    <text x="400" y="88"  fill="#ffd700" font-size="10">🔑 id</text>
+    <text x="400" y="103" fill="#cdd" font-size="10">codigo (UNIQUE)</text>
+    <text x="400" y="118" fill="#cdd" font-size="10">nombre, ciudad…</text>
+  </g>
+
+  <!-- CLIENTES -->
+  <g>
+    <rect x="760" y="40" width="160" height="110" rx="8" fill="#0f3460" stroke="#e94560" stroke-width="2"/>
+    <text x="840" y="62" text-anchor="middle" fill="white" font-size="12" font-weight="700">CLIENTES</text>
+    <line x1="760" y1="70" x2="920" y2="70" stroke="white" stroke-width=".5" opacity=".4"/>
+    <text x="770" y="88"  fill="#ffd700" font-size="10">🔑 id</text>
+    <text x="770" y="103" fill="#cdd" font-size="10">tipo/num_documento</text>
+    <text x="770" y="118" fill="#cdd" font-size="10">nombre, email</text>
+    <text x="770" y="133" fill="#cdd" font-size="10">ciudad, telefono</text>
+  </g>
+
+  <!-- PEDIDOS -->
+  <g>
+    <rect x="390" y="220" width="170" height="150" rx="8" fill="#16213e" stroke="#e94560" stroke-width="2.5"/>
+    <text x="475" y="242" text-anchor="middle" fill="white" font-size="12" font-weight="700">PEDIDOS</text>
+    <line x1="390" y1="250" x2="560" y2="250" stroke="white" stroke-width=".5" opacity=".4"/>
+    <text x="400" y="268" fill="#ffd700" font-size="10">🔑 id</text>
+    <text x="400" y="283" fill="#cdd" font-size="10">numero_pedido</text>
+    <text x="400" y="298" fill="#cdd" font-size="10">estado, total</text>
+    <text x="400" y="313" fill="#7bb8ff" font-size="10">🔗 cliente_id</text>
+    <text x="400" y="328" fill="#7bb8ff" font-size="10">🔗 sucursal_id</text>
+    <text x="400" y="343" fill="#cdd" font-size="10">fecha_pedido</text>
+  </g>
+
+  <!-- DETALLE_PEDIDOS -->
+  <g>
+    <rect x="200" y="430" width="165" height="130" rx="8" fill="#0f3460" stroke="#e94560" stroke-width="2"/>
+    <text x="282" y="452" text-anchor="middle" fill="white" font-size="11" font-weight="700">DETALLE_PEDIDOS</text>
+    <line x1="200" y1="460" x2="365" y2="460" stroke="white" stroke-width=".5" opacity=".4"/>
+    <text x="210" y="478" fill="#ffd700" font-size="10">🔑 id</text>
+    <text x="210" y="493" fill="#7bb8ff" font-size="10">🔗 pedido_id</text>
+    <text x="210" y="508" fill="#7bb8ff" font-size="10">🔗 producto_id</text>
+    <text x="210" y="523" fill="#cdd" font-size="10">cantidad, precio</text>
+    <text x="210" y="538" fill="#cdd" font-size="10">descuento, subtotal</text>
+  </g>
+
+  <!-- FACTURAS -->
+  <g>
+    <rect x="600" y="370" width="165" height="140" rx="8" fill="#0f3460" stroke="#e94560" stroke-width="2"/>
+    <text x="682" y="392" text-anchor="middle" fill="white" font-size="12" font-weight="700">FACTURAS</text>
+    <line x1="600" y1="400" x2="765" y2="400" stroke="white" stroke-width=".5" opacity=".4"/>
+    <text x="610" y="418" fill="#ffd700" font-size="10">🔑 id</text>
+    <text x="610" y="433" fill="#cdd" font-size="10">numero_factura</text>
+    <text x="610" y="448" fill="#cdd" font-size="10">subtotal, iva, total</text>
+    <text x="610" y="463" fill="#cdd" font-size="10">estado</text>
+    <text x="610" y="478" fill="#7bb8ff" font-size="10">🔗 pedido_id (1:1)</text>
+    <text x="610" y="493" fill="#cdd" font-size="10">fecha_emision</text>
+  </g>
+
+  <!-- PAGOS -->
+  <g>
+    <rect x="790" y="430" width="160" height="130" rx="8" fill="#0f3460" stroke="#e94560" stroke-width="2"/>
+    <text x="870" y="452" text-anchor="middle" fill="white" font-size="12" font-weight="700">PAGOS</text>
+    <line x1="790" y1="460" x2="950" y2="460" stroke="white" stroke-width=".5" opacity=".4"/>
+    <text x="800" y="478" fill="#ffd700" font-size="10">🔑 id</text>
+    <text x="800" y="493" fill="#cdd" font-size="10">numero_pago</text>
+    <text x="800" y="508" fill="#cdd" font-size="10">monto, metodo</text>
+    <text x="800" y="523" fill="#7bb8ff" font-size="10">🔗 factura_id</text>
+    <text x="800" y="538" fill="#cdd" font-size="10">estado, referencia</text>
+  </g>
+
+  <!-- ── Líneas de relación ── -->
+  <!-- Producto → Proveedor -->
+  <line x1="100" y1="140" x2="100" y2="220" stroke="#0f3460" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="108" y="185" fill="#e94560" font-size="10" font-weight="700">N:1</text>
+
+  <!-- Pedido → Sucursal -->
+  <line x1="470" y1="140" x2="470" y2="220" stroke="#0f3460" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="478" y="185" fill="#e94560" font-size="10" font-weight="700">N:1</text>
+
+  <!-- Pedido → Cliente -->
+  <line x1="560" y1="290" x2="760" y2="100" stroke="#0f3460" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="680" y="185" fill="#e94560" font-size="10" font-weight="700">N:1</text>
+
+  <!-- Pedido → Producto (a través de Detalle) -->
+  <line x1="180" y1="290" x2="390" y2="290" stroke="#0f3460" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="260" y="282" fill="#e94560" font-size="10" font-weight="700">N:1</text>
+
+  <!-- DetallePedido → Pedido -->
+  <line x1="282" y1="430" x2="450" y2="370" stroke="#0f3460" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="335" y="395" fill="#e94560" font-size="10" font-weight="700">N:1</text>
+
+  <!-- DetallePedido → Producto -->
+  <line x1="220" y1="430" x2="120" y2="340" stroke="#0f3460" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="145" y="395" fill="#e94560" font-size="10" font-weight="700">N:1</text>
+
+  <!-- Factura → Pedido -->
+  <line x1="600" y1="440" x2="560" y2="350" stroke="#0f3460" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="555" y="400" fill="#e94560" font-size="10" font-weight="700">1:1</text>
+
+  <!-- Pago → Factura -->
+  <line x1="800" y1="490" x2="765" y2="460" stroke="#0f3460" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="775" y="490" fill="#e94560" font-size="10" font-weight="700">N:1</text>
+
+  <!-- Leyenda -->
+  <rect x="20" y="560" width="260" height="48" rx="6" fill="white" stroke="#ddd"/>
+  <text x="30" y="578" fill="#333" font-size="10" font-weight="700">Leyenda:</text>
+  <rect x="30" y="582" width="12" height="12" fill="#ffd700" rx="2"/>
+  <text x="46" y="592" fill="#555" font-size="10">PK - Clave Primaria</text>
+  <rect x="140" y="582" width="12" height="12" fill="#7bb8ff" rx="2"/>
+  <text x="156" y="592" fill="#555" font-size="10">FK - Clave Foránea</text>
+  <text x="30" y="602" fill="#e94560" font-size="10" font-weight="700">— N:1</text>
+  <text x="70" y="602" fill="#555" font-size="10">Muchos a uno</text>
+  <text x="155" y="602" fill="#e94560" font-size="10" font-weight="700">— 1:1</text>
+  <text x="195" y="602" fill="#555" font-size="10">Uno a uno</text>
+</svg>
+</div>
+
+<!-- 3. DICCIONARIO DE DATOS -->
+<h2 class="sec">3. Diccionario de Datos</h2>
+
+<h3 class="sub">Tabla: clientes</h3>
+<table>
+  <thead><tr><th>Campo</th><th>Tipo</th><th>Restricción</th><th>Descripción</th></tr></thead>
+  <tbody>
+    <tr><td><span class="tag tag-pk">PK</span> id</td><td>BIGSERIAL</td><td class="req">NOT NULL</td><td>Identificador único</td></tr>
+    <tr><td>tipo_documento</td><td>VARCHAR(5)</td><td class="req">NOT NULL</td><td>CC / NIT / CE / PP</td></tr>
+    <tr><td>numero_documento</td><td>VARCHAR(20)</td><td class="req">NOT NULL, UNIQUE</td><td>Número de identificación</td></tr>
+    <tr><td>nombre</td><td>VARCHAR(150)</td><td class="req">NOT NULL</td><td>Nombre o razón social</td></tr>
+    <tr><td>apellido</td><td>VARCHAR(150)</td><td class="opt">—</td><td>Apellido (personas naturales)</td></tr>
+    <tr><td>email</td><td>VARCHAR(254)</td><td class="req">NOT NULL, UNIQUE</td><td>Correo electrónico</td></tr>
+    <tr><td>telefono</td><td>VARCHAR(20)</td><td class="opt">—</td><td>Teléfono de contacto</td></tr>
+    <tr><td>ciudad</td><td>VARCHAR(100)</td><td class="opt">—</td><td>Ciudad de residencia</td></tr>
+    <tr><td>activo</td><td>BOOLEAN</td><td class="req">DEFAULT TRUE</td><td>FALSE = eliminado (soft delete)</td></tr>
+    <tr><td>fecha_creacion</td><td>TIMESTAMPTZ</td><td class="req">DEFAULT NOW()</td><td>Fecha de creación</td></tr>
+    <tr><td>fecha_modificacion</td><td>TIMESTAMPTZ</td><td class="req">DEFAULT NOW()</td><td>Última modificación</td></tr>
+    <tr><td>creado_por_id</td><td>INTEGER</td><td class="opt">FK → auth_user</td><td>Usuario que creó el registro</td></tr>
+    <tr><td>modificado_por_id</td><td>INTEGER</td><td class="opt">FK → auth_user</td><td>Usuario que modificó por última vez</td></tr>
+  </tbody>
+</table>
+
+<h3 class="sub">Tabla: proveedores</h3>
+<table>
+  <thead><tr><th>Campo</th><th>Tipo</th><th>Restricción</th><th>Descripción</th></tr></thead>
+  <tbody>
+    <tr><td><span class="tag tag-pk">PK</span> id</td><td>BIGSERIAL</td><td class="req">NOT NULL</td><td>Identificador único</td></tr>
+    <tr><td>nit</td><td>VARCHAR(20)</td><td class="req">NOT NULL, UNIQUE</td><td>NIT del proveedor</td></tr>
+    <tr><td>nombre</td><td>VARCHAR(200)</td><td class="req">NOT NULL</td><td>Razón social</td></tr>
+    <tr><td>contacto</td><td>VARCHAR(150)</td><td class="opt">—</td><td>Persona de contacto</td></tr>
+    <tr><td>email</td><td>VARCHAR(254)</td><td class="opt">—</td><td>Correo electrónico</td></tr>
+    <tr><td>telefono</td><td>VARCHAR(20)</td><td class="opt">—</td><td>Teléfono</td></tr>
+    <tr><td>ciudad</td><td>VARCHAR(100)</td><td class="opt">—</td><td>Ciudad</td></tr>
+    <tr><td>activo</td><td>BOOLEAN</td><td class="req">DEFAULT TRUE</td><td>Soft delete</td></tr>
+    <tr><td>fecha_creacion / fecha_modificacion</td><td>TIMESTAMPTZ</td><td class="req">AUTO</td><td>Auditoría de fechas</td></tr>
+  </tbody>
+</table>
+
+<h3 class="sub">Tabla: sucursales</h3>
+<table>
+  <thead><tr><th>Campo</th><th>Tipo</th><th>Restricción</th><th>Descripción</th></tr></thead>
+  <tbody>
+    <tr><td><span class="tag tag-pk">PK</span> id</td><td>BIGSERIAL</td><td class="req">NOT NULL</td><td>Identificador único</td></tr>
+    <tr><td>codigo</td><td>VARCHAR(20)</td><td class="req">NOT NULL, UNIQUE</td><td>Código de sucursal (ej: SUC-BOG)</td></tr>
+    <tr><td>nombre</td><td>VARCHAR(200)</td><td class="req">NOT NULL</td><td>Nombre descriptivo</td></tr>
+    <tr><td>direccion</td><td>TEXT</td><td class="req">NOT NULL</td><td>Dirección física</td></tr>
+    <tr><td>ciudad</td><td>VARCHAR(100)</td><td class="req">NOT NULL</td><td>Ciudad</td></tr>
+    <tr><td>es_principal</td><td>BOOLEAN</td><td class="req">DEFAULT FALSE</td><td>Indica si es la sede principal</td></tr>
+    <tr><td>activo</td><td>BOOLEAN</td><td class="req">DEFAULT TRUE</td><td>Soft delete</td></tr>
+  </tbody>
+</table>
+
+<h3 class="sub">Tabla: productos</h3>
+<table>
+  <thead><tr><th>Campo</th><th>Tipo</th><th>Restricción</th><th>Descripción</th></tr></thead>
+  <tbody>
+    <tr><td><span class="tag tag-pk">PK</span> id</td><td>BIGSERIAL</td><td class="req">NOT NULL</td><td>Identificador único</td></tr>
+    <tr><td>codigo</td><td>VARCHAR(50)</td><td class="req">NOT NULL, UNIQUE</td><td>Código de referencia del producto</td></tr>
+    <tr><td>nombre</td><td>VARCHAR(200)</td><td class="req">NOT NULL</td><td>Nombre del producto</td></tr>
+    <tr><td>precio</td><td>NUMERIC(12,2)</td><td class="req">NOT NULL, ≥ 0</td><td>Precio de venta</td></tr>
+    <tr><td>stock</td><td>INTEGER</td><td class="req">DEFAULT 0, ≥ 0</td><td>Cantidad disponible</td></tr>
+    <tr><td>stock_minimo</td><td>INTEGER</td><td class="req">DEFAULT 5</td><td>Alerta de reabastecimiento</td></tr>
+    <tr><td>unidad_medida</td><td>VARCHAR(5)</td><td class="req">CHECK</td><td>UND / KG / LT / MT / CJ</td></tr>
+    <tr><td><span class="tag tag-fk">FK</span> proveedor_id</td><td>BIGINT</td><td class="req">NOT NULL</td><td>Proveedor del producto</td></tr>
+    <tr><td>activo</td><td>BOOLEAN</td><td class="req">DEFAULT TRUE</td><td>Soft delete</td></tr>
+  </tbody>
+</table>
+
+<h3 class="sub">Tabla: pedidos</h3>
+<table>
+  <thead><tr><th>Campo</th><th>Tipo</th><th>Restricción</th><th>Descripción</th></tr></thead>
+  <tbody>
+    <tr><td><span class="tag tag-pk">PK</span> id</td><td>BIGSERIAL</td><td class="req">NOT NULL</td><td>Identificador único</td></tr>
+    <tr><td>numero_pedido</td><td>VARCHAR(20)</td><td class="req">NOT NULL, UNIQUE</td><td>Número de pedido (ej: PED-2024-001)</td></tr>
+    <tr><td>fecha_pedido</td><td>DATE</td><td class="req">NOT NULL</td><td>Fecha en que se realizó el pedido</td></tr>
+    <tr><td>estado</td><td>VARCHAR(15)</td><td class="req">CHECK</td><td>PENDIENTE / APROBADO / ENVIADO / ENTREGADO / CANCELADO</td></tr>
+    <tr><td>total</td><td>NUMERIC(14,2)</td><td class="req">DEFAULT 0</td><td>Suma automática de subtotales</td></tr>
+    <tr><td><span class="tag tag-fk">FK</span> cliente_id</td><td>BIGINT</td><td class="req">NOT NULL</td><td>Cliente que realizó el pedido</td></tr>
+    <tr><td><span class="tag tag-fk">FK</span> sucursal_id</td><td>BIGINT</td><td class="req">NOT NULL</td><td>Sucursal que atiende el pedido</td></tr>
+    <tr><td>activo</td><td>BOOLEAN</td><td class="req">DEFAULT TRUE</td><td>Soft delete</td></tr>
+  </tbody>
+</table>
+
+<h3 class="sub">Tabla: detalle_pedidos</h3>
+<table>
+  <thead><tr><th>Campo</th><th>Tipo</th><th>Restricción</th><th>Descripción</th></tr></thead>
+  <tbody>
+    <tr><td><span class="tag tag-pk">PK</span> id</td><td>BIGSERIAL</td><td class="req">NOT NULL</td><td>Identificador único</td></tr>
+    <tr><td><span class="tag tag-fk">FK</span> pedido_id</td><td>BIGINT</td><td class="req">NOT NULL, CASCADE</td><td>Pedido al que pertenece</td></tr>
+    <tr><td><span class="tag tag-fk">FK</span> producto_id</td><td>BIGINT</td><td class="req">NOT NULL</td><td>Producto incluido</td></tr>
+    <tr><td>cantidad</td><td>INTEGER</td><td class="req">NOT NULL, > 0</td><td>Cantidad pedida</td></tr>
+    <tr><td>precio_unitario</td><td>NUMERIC(12,2)</td><td class="req">NOT NULL</td><td>Precio al momento de la venta</td></tr>
+    <tr><td>descuento</td><td>NUMERIC(5,2)</td><td class="req">DEFAULT 0, 0–100</td><td>Porcentaje de descuento</td></tr>
+    <tr><td>subtotal</td><td>NUMERIC(14,2)</td><td class="req">CALCULADO</td><td>cantidad × precio × (1 − desc/100)</td></tr>
+    <tr><td>UNIQUE</td><td>—</td><td class="req">(pedido_id, producto_id)</td><td>Un producto no se repite en el mismo pedido</td></tr>
+  </tbody>
+</table>
+
+<h3 class="sub">Tabla: facturas</h3>
+<table>
+  <thead><tr><th>Campo</th><th>Tipo</th><th>Restricción</th><th>Descripción</th></tr></thead>
+  <tbody>
+    <tr><td><span class="tag tag-pk">PK</span> id</td><td>BIGSERIAL</td><td class="req">NOT NULL</td><td>Identificador único</td></tr>
+    <tr><td>numero_factura</td><td>VARCHAR(20)</td><td class="req">NOT NULL, UNIQUE</td><td>Número de factura</td></tr>
+    <tr><td>estado</td><td>VARCHAR(10)</td><td class="req">CHECK</td><td>PENDIENTE / PAGADA / ANULADA / VENCIDA</td></tr>
+    <tr><td>subtotal</td><td>NUMERIC(14,2)</td><td class="req">NOT NULL</td><td>Base antes de IVA</td></tr>
+    <tr><td>iva</td><td>NUMERIC(5,2)</td><td class="req">DEFAULT 19</td><td>Porcentaje de IVA</td></tr>
+    <tr><td>total</td><td>NUMERIC(14,2)</td><td class="req">CALCULADO</td><td>subtotal × (1 + iva/100)</td></tr>
+    <tr><td><span class="tag tag-fk">FK</span> pedido_id</td><td>BIGINT</td><td class="req">NOT NULL, UNIQUE</td><td>Pedido asociado (relación 1:1)</td></tr>
+    <tr><td>activo</td><td>BOOLEAN</td><td class="req">DEFAULT TRUE</td><td>Soft delete</td></tr>
+  </tbody>
+</table>
+
+<h3 class="sub">Tabla: pagos</h3>
+<table>
+  <thead><tr><th>Campo</th><th>Tipo</th><th>Restricción</th><th>Descripción</th></tr></thead>
+  <tbody>
+    <tr><td><span class="tag tag-pk">PK</span> id</td><td>BIGSERIAL</td><td class="req">NOT NULL</td><td>Identificador único</td></tr>
+    <tr><td>numero_pago</td><td>VARCHAR(20)</td><td class="req">NOT NULL, UNIQUE</td><td>Número de comprobante</td></tr>
+    <tr><td>monto</td><td>NUMERIC(14,2)</td><td class="req">NOT NULL, > 0</td><td>Valor pagado</td></tr>
+    <tr><td>metodo_pago</td><td>VARCHAR(15)</td><td class="req">CHECK</td><td>EFECTIVO / TRANSFERENCIA / TARJETA_CRED / TARJETA_DEB / CHEQUE / PSE</td></tr>
+    <tr><td>estado</td><td>VARCHAR(12)</td><td class="req">CHECK</td><td>PENDIENTE / APROBADO / RECHAZADO / REEMBOLSADO</td></tr>
+    <tr><td>referencia</td><td>VARCHAR(100)</td><td class="opt">—</td><td>Número de transacción bancaria</td></tr>
+    <tr><td><span class="tag tag-fk">FK</span> factura_id</td><td>BIGINT</td><td class="req">NOT NULL</td><td>Factura que se está pagando</td></tr>
+    <tr><td>activo</td><td>BOOLEAN</td><td class="req">DEFAULT TRUE</td><td>Soft delete</td></tr>
+  </tbody>
+</table>
+
+<!-- 4. RELACIONES -->
+<h2 class="sec">4. Relaciones Implementadas</h2>
+<div class="rel-grid">
+  <div class="rel-card">
+    <h4>Producto <span class="arrow">→</span> Proveedor</h4>
+    <p>Tipo: N:1 (muchos a uno). Cada producto pertenece a un único proveedor. Un proveedor puede suministrar múltiples productos.</p>
+  </div>
+  <div class="rel-card">
+    <h4>Pedido <span class="arrow">→</span> Cliente</h4>
+    <p>Tipo: N:1. Un cliente puede tener muchos pedidos. Cada pedido pertenece a un único cliente.</p>
+  </div>
+  <div class="rel-card">
+    <h4>Pedido <span class="arrow">→</span> Sucursal</h4>
+    <p>Tipo: N:1. Cada pedido es atendido por una sucursal. Una sucursal puede gestionar múltiples pedidos.</p>
+  </div>
+  <div class="rel-card">
+    <h4>DetallePedido <span class="arrow">→</span> Pedido</h4>
+    <p>Tipo: N:1. Un pedido tiene múltiples líneas de detalle. Cada detalle pertenece a un único pedido (CASCADE al eliminar).</p>
+  </div>
+  <div class="rel-card">
+    <h4>DetallePedido <span class="arrow">→</span> Producto</h4>
+    <p>Tipo: N:1. Cada línea de detalle referencia un producto. El precio se guarda históricamente en el detalle.</p>
+  </div>
+  <div class="rel-card">
+    <h4>Factura <span class="arrow">→</span> Pedido</h4>
+    <p>Tipo: 1:1. Cada pedido genera exactamente una factura. Implementada con UNIQUE en pedido_id.</p>
+  </div>
+  <div class="rel-card">
+    <h4>Pago <span class="arrow">→</span> Factura</h4>
+    <p>Tipo: N:1. Una factura puede recibir múltiples pagos parciales. Cada pago referencia una única factura.</p>
+  </div>
+</div>
+
+<!-- 5. JUSTIFICACIÓN DEL MODELO -->
+<h2 class="sec">5. Justificación del Modelo</h2>
+<p><strong>Normalización:</strong> el modelo está en 3FN. Los datos del proveedor no se repiten en productos; los datos del cliente no se repiten en pedidos. El precio unitario se almacena en detalle_pedidos (no en productos) para preservar el historial de ventas.</p>
+<p><strong>Soft Delete:</strong> todas las tablas implementan el campo <code>activo</code> en lugar de borrar registros físicamente, preservando la integridad histórica de facturas, pedidos y pagos.</p>
+<p><strong>Auditoría:</strong> los campos <code>creado_por_id</code> y <code>modificado_por_id</code> permiten rastrear qué usuario realizó cada operación.</p>
+<p><strong>Cálculos automáticos:</strong> el subtotal en detalle_pedidos y el total en pedidos/facturas se recalculan en cada operación de escritura mediante el método <code>save()</code> del modelo Django, garantizando consistencia.</p>
+<p><strong>Índices:</strong> se crean índices en todas las claves foráneas y en los campos usados frecuentemente en filtros (<code>estado</code>, <code>activo</code>, <code>email</code>) para optimizar el rendimiento de consultas.</p>
+
+<!-- 6. AJUSTES IMPLEMENTADOS -->
+<h2 class="sec">6. Ajustes Obligatorios Implementados (13/13)</h2>
+<div class="adj-grid">
+  <div class="adj-card"><div class="adj-num">1</div><div><h4>Swagger</h4><p>drf-spectacular → /api/docs/</p></div></div>
+  <div class="adj-card"><div class="adj-num">2</div><div><h4>Versionado</h4><p>Prefijo /api/v1/</p></div></div>
+  <div class="adj-card"><div class="adj-num">3</div><div><h4>Respuestas JSON</h4><p>config/responses.py</p></div></div>
+  <div class="adj-card"><div class="adj-num">4</div><div><h4>Paginación</h4><p>StandardPagination</p></div></div>
+  <div class="adj-card"><div class="adj-num">5</div><div><h4>Filtros</h4><p>django-filter + FilterSet</p></div></div>
+  <div class="adj-card"><div class="adj-num">6</div><div><h4>Ordenamiento</h4><p>OrderingFilter de DRF</p></div></div>
+  <div class="adj-card"><div class="adj-num">7</div><div><h4>Soft Delete</h4><p>SoftDeleteMixin → activo=False</p></div></div>
+  <div class="adj-card"><div class="adj-num">8</div><div><h4>Auditoría</h4><p>creado_por / modificado_por</p></div></div>
+  <div class="adj-card"><div class="adj-num">9</div><div><h4>JWT</h4><p>simplejwt → /api/v1/auth/</p></div></div>
+  <div class="adj-card"><div class="adj-num">10</div><div><h4>Roles y permisos</h4><p>Administrador / Vendedor / Bodega</p></div></div>
+  <div class="adj-card"><div class="adj-num">11</div><div><h4>Nested Serializers</h4><p>Anidados en Pedidos, Facturas, Pagos</p></div></div>
+  <div class="adj-card"><div class="adj-num">12</div><div><h4>Exportación</h4><p>/exportar/?formato=excel o csv</p></div></div>
+  <div class="adj-card"><div class="adj-num">13</div><div><h4>Logging</h4><p>LoggingMiddleware + archivo .log</p></div></div>
+</div>
+
+<br><br>
+<p style="text-align:center;color:#888;font-size:.82rem">
+  Sistema de Gestión de Ventas · Problema 4 · Tecnológico en Desarrollo de Software
+</p>
+
+</div>
+</body>
+</html>

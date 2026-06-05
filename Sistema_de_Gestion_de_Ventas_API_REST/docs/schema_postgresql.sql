@@ -1,0 +1,187 @@
+-- ============================================================
+-- SISTEMA DE GESTIÓN DE VENTAS
+-- Script de inicialización de base de datos PostgreSQL
+-- ============================================================
+
+-- 1. Crear la base de datos (ejecutar como superusuario)
+-- CREATE DATABASE ventas_db
+--     WITH ENCODING = 'UTF8'
+--     LC_COLLATE = 'es_CO.UTF-8'
+--     LC_CTYPE   = 'es_CO.UTF-8';
+
+-- 2. Conectarse a ventas_db y ejecutar lo siguiente:
+
+-- Crear schema
+CREATE SCHEMA IF NOT EXISTS ventas_schema;
+
+-- Establecer schema por defecto para la sesión
+SET search_path TO ventas_schema, public;
+
+-- Crear usuario de aplicación (opcional, buena práctica)
+-- CREATE USER ventas_user WITH PASSWORD 'password_seguro';
+-- GRANT USAGE  ON SCHEMA ventas_schema TO ventas_user;
+-- GRANT CREATE ON SCHEMA ventas_schema TO ventas_user;
+-- GRANT ALL PRIVILEGES ON ALL TABLES    IN SCHEMA ventas_schema TO ventas_user;
+-- GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA ventas_schema TO ventas_user;
+
+-- ============================================================
+-- TABLAS (Django las crea vía migraciones; esto es referencia)
+-- ============================================================
+
+-- Tabla: clientes
+-- CREATE TABLE ventas_schema.clientes (
+--     id                  BIGSERIAL PRIMARY KEY,
+--     tipo_documento      VARCHAR(5)   NOT NULL,
+--     numero_documento    VARCHAR(20)  NOT NULL UNIQUE,
+--     nombre              VARCHAR(150) NOT NULL,
+--     apellido            VARCHAR(150),
+--     email               VARCHAR(254) NOT NULL UNIQUE,
+--     telefono            VARCHAR(20),
+--     direccion           TEXT,
+--     ciudad              VARCHAR(100),
+--     activo              BOOLEAN      NOT NULL DEFAULT TRUE,
+--     fecha_creacion      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+--     fecha_modificacion  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+--     creado_por_id       INTEGER REFERENCES auth_user(id),
+--     modificado_por_id   INTEGER REFERENCES auth_user(id)
+-- );
+
+-- Tabla: proveedores
+-- CREATE TABLE ventas_schema.proveedores (
+--     id                  BIGSERIAL PRIMARY KEY,
+--     nit                 VARCHAR(20)  NOT NULL UNIQUE,
+--     nombre              VARCHAR(200) NOT NULL,
+--     contacto            VARCHAR(150),
+--     email               VARCHAR(254),
+--     telefono            VARCHAR(20),
+--     direccion           TEXT,
+--     ciudad              VARCHAR(100),
+--     sitio_web           VARCHAR(200),
+--     activo              BOOLEAN      NOT NULL DEFAULT TRUE,
+--     fecha_creacion      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+--     fecha_modificacion  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+--     creado_por_id       INTEGER REFERENCES auth_user(id),
+--     modificado_por_id   INTEGER REFERENCES auth_user(id)
+-- );
+
+-- Tabla: sucursales
+-- CREATE TABLE ventas_schema.sucursales (
+--     id                  BIGSERIAL PRIMARY KEY,
+--     codigo              VARCHAR(20)  NOT NULL UNIQUE,
+--     nombre              VARCHAR(200) NOT NULL,
+--     direccion           TEXT         NOT NULL,
+--     ciudad              VARCHAR(100) NOT NULL,
+--     telefono            VARCHAR(20),
+--     email               VARCHAR(254),
+--     es_principal        BOOLEAN      NOT NULL DEFAULT FALSE,
+--     activo              BOOLEAN      NOT NULL DEFAULT TRUE,
+--     fecha_creacion      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+--     fecha_modificacion  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+--     creado_por_id       INTEGER REFERENCES auth_user(id),
+--     modificado_por_id   INTEGER REFERENCES auth_user(id)
+-- );
+
+-- Tabla: productos
+-- CREATE TABLE ventas_schema.productos (
+--     id                  BIGSERIAL PRIMARY KEY,
+--     codigo              VARCHAR(50)    NOT NULL UNIQUE,
+--     nombre              VARCHAR(200)   NOT NULL,
+--     descripcion         TEXT,
+--     precio              NUMERIC(12,2)  NOT NULL,
+--     stock               INTEGER        NOT NULL DEFAULT 0,
+--     stock_minimo        INTEGER        NOT NULL DEFAULT 5,
+--     unidad_medida       VARCHAR(5)     NOT NULL DEFAULT 'UND',
+--     proveedor_id        BIGINT         NOT NULL REFERENCES ventas_schema.proveedores(id),
+--     activo              BOOLEAN        NOT NULL DEFAULT TRUE,
+--     fecha_creacion      TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+--     fecha_modificacion  TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+--     creado_por_id       INTEGER REFERENCES auth_user(id),
+--     modificado_por_id   INTEGER REFERENCES auth_user(id)
+-- );
+
+-- Tabla: pedidos
+-- CREATE TABLE ventas_schema.pedidos (
+--     id                  BIGSERIAL PRIMARY KEY,
+--     numero_pedido       VARCHAR(20)    NOT NULL UNIQUE,
+--     fecha_pedido        DATE           NOT NULL,
+--     fecha_entrega       DATE,
+--     estado              VARCHAR(15)    NOT NULL DEFAULT 'PENDIENTE',
+--     cliente_id          BIGINT         NOT NULL REFERENCES ventas_schema.clientes(id),
+--     sucursal_id         BIGINT         NOT NULL REFERENCES ventas_schema.sucursales(id),
+--     observaciones       TEXT,
+--     total               NUMERIC(14,2)  NOT NULL DEFAULT 0,
+--     activo              BOOLEAN        NOT NULL DEFAULT TRUE,
+--     fecha_creacion      TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+--     fecha_modificacion  TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+--     creado_por_id       INTEGER REFERENCES auth_user(id),
+--     modificado_por_id   INTEGER REFERENCES auth_user(id)
+-- );
+
+-- Tabla: detalle_pedidos
+-- CREATE TABLE ventas_schema.detalle_pedidos (
+--     id                  BIGSERIAL PRIMARY KEY,
+--     pedido_id           BIGINT         NOT NULL REFERENCES ventas_schema.pedidos(id) ON DELETE CASCADE,
+--     producto_id         BIGINT         NOT NULL REFERENCES ventas_schema.productos(id),
+--     cantidad            INTEGER        NOT NULL,
+--     precio_unitario     NUMERIC(12,2)  NOT NULL,
+--     descuento           NUMERIC(5,2)   NOT NULL DEFAULT 0,
+--     subtotal            NUMERIC(14,2)  NOT NULL DEFAULT 0,
+--     activo              BOOLEAN        NOT NULL DEFAULT TRUE,
+--     fecha_creacion      TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+--     fecha_modificacion  TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+--     creado_por_id       INTEGER REFERENCES auth_user(id),
+--     modificado_por_id   INTEGER REFERENCES auth_user(id),
+--     UNIQUE(pedido_id, producto_id)
+-- );
+
+-- Tabla: facturas
+-- CREATE TABLE ventas_schema.facturas (
+--     id                  BIGSERIAL PRIMARY KEY,
+--     numero_factura      VARCHAR(20)    NOT NULL UNIQUE,
+--     fecha_emision       DATE           NOT NULL,
+--     fecha_vencimiento   DATE           NOT NULL,
+--     estado              VARCHAR(10)    NOT NULL DEFAULT 'PENDIENTE',
+--     pedido_id           BIGINT         NOT NULL UNIQUE REFERENCES ventas_schema.pedidos(id),
+--     subtotal            NUMERIC(14,2)  NOT NULL,
+--     iva                 NUMERIC(5,2)   NOT NULL DEFAULT 19,
+--     total               NUMERIC(14,2)  NOT NULL,
+--     observaciones       TEXT,
+--     activo              BOOLEAN        NOT NULL DEFAULT TRUE,
+--     fecha_creacion      TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+--     fecha_modificacion  TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+--     creado_por_id       INTEGER REFERENCES auth_user(id),
+--     modificado_por_id   INTEGER REFERENCES auth_user(id)
+-- );
+
+-- Tabla: pagos
+-- CREATE TABLE ventas_schema.pagos (
+--     id                  BIGSERIAL PRIMARY KEY,
+--     numero_pago         VARCHAR(20)    NOT NULL UNIQUE,
+--     fecha_pago          DATE           NOT NULL,
+--     monto               NUMERIC(14,2)  NOT NULL,
+--     metodo_pago         VARCHAR(15)    NOT NULL,
+--     estado              VARCHAR(12)    NOT NULL DEFAULT 'PENDIENTE',
+--     referencia          VARCHAR(100),
+--     factura_id          BIGINT         NOT NULL REFERENCES ventas_schema.facturas(id),
+--     observaciones       TEXT,
+--     activo              BOOLEAN        NOT NULL DEFAULT TRUE,
+--     fecha_creacion      TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+--     fecha_modificacion  TIMESTAMPTZ    NOT NULL DEFAULT NOW(),
+--     creado_por_id       INTEGER REFERENCES auth_user(id),
+--     modificado_por_id   INTEGER REFERENCES auth_user(id)
+-- );
+
+-- ============================================================
+-- ÍNDICES RECOMENDADOS
+-- ============================================================
+-- CREATE INDEX idx_clientes_email           ON ventas_schema.clientes(email);
+-- CREATE INDEX idx_clientes_documento       ON ventas_schema.clientes(numero_documento);
+-- CREATE INDEX idx_productos_proveedor      ON ventas_schema.productos(proveedor_id);
+-- CREATE INDEX idx_pedidos_cliente          ON ventas_schema.pedidos(cliente_id);
+-- CREATE INDEX idx_pedidos_sucursal         ON ventas_schema.pedidos(sucursal_id);
+-- CREATE INDEX idx_pedidos_estado           ON ventas_schema.pedidos(estado);
+-- CREATE INDEX idx_detalle_pedido           ON ventas_schema.detalle_pedidos(pedido_id);
+-- CREATE INDEX idx_facturas_pedido          ON ventas_schema.facturas(pedido_id);
+-- CREATE INDEX idx_facturas_estado          ON ventas_schema.facturas(estado);
+-- CREATE INDEX idx_pagos_factura            ON ventas_schema.pagos(factura_id);
+-- CREATE INDEX idx_pagos_estado             ON ventas_schema.pagos(estado);
